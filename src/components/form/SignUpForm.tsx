@@ -15,10 +15,12 @@ import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import Link from 'next/link';
 import GoogleSignInButton from '../GoogleSignInButton';
+import { useRouter } from 'next/navigation';
+import Swal from 'sweetalert2'
 
 const FormSchema = z
   .object({
-    username: z.string().min(1, 'Username is required').max(100),
+    userName: z.string().min(1, 'userName is required').max(100),
     email: z.string().min(1, 'Email is required').email('Invalid email'),
     password: z
       .string()
@@ -32,19 +34,46 @@ const FormSchema = z
   });
 
 const SignUpForm = () => {
+  const router = useRouter()
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      username: '',
+      userName: '',
       email: '',
       password: '',
-      confirmPassword: '',
     },
   });
 
-  const onSubmit = (values: z.infer<typeof FormSchema>) => {
-    console.log(values);
-  };
+  const onSubmit =async (values: z.infer<typeof FormSchema>) => {
+    const response = await fetch("/api/user",{
+      method:"POST",
+      headers:{
+        "Content-type":"application/json"
+      },
+      body:JSON.stringify({
+        userName:values.userName,
+        email: values.email,
+        password: values.password
+      })
+    })
+
+    if(response.ok){
+      router.push("/sign-in")
+      Swal.fire({
+        position: "top-end",
+        icon: "success",
+        title: "Your work has been saved",
+        showConfirmButton: false,
+        timer: 1500
+      });
+    }else{
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "registration failed!",
+      });
+     }
+   };
 
   return (
     <Form {...form}>
@@ -52,10 +81,10 @@ const SignUpForm = () => {
         <div className='space-y-2'>
           <FormField
             control={form.control}
-            name='username'
+            name='userName'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Username</FormLabel>
+                <FormLabel>userName</FormLabel>
                 <FormControl>
                   <Input placeholder='johndoe' {...field} />
                 </FormControl>
